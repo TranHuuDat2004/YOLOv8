@@ -25,22 +25,39 @@ def calculate_angle(a, b, c):
 # --- GIAO DIỆN STREAMLIT ---
 st.set_page_config(layout="wide", page_title="AI Fitness Trainer")
 
-st.title("💪 AI Personal Trainer - Cloud Version")
-st.write("Phiên bản Web: Đứng xa camera để thấy toàn bộ cơ thể.")
+# Giấu Menu mặc định cho đẹp
+hide_st_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_st_style, unsafe_allow_html=True)
 
-# --- CLASS XỬ LÝ VIDEO CHO WEBRTC ---
-# Khác với Local, trên Web ta phải dùng Class này để xử lý từng frame ảnh
+# --- SIDEBAR (THANH BÊN) ---
+st.sidebar.title("⚙️ Cấu hình")
+st.sidebar.info("Phiên bản Cloud (WebRTC)")
+target_reps = st.sidebar.number_input("Mục tiêu (Cái)", min_value=1, value=10)
+confidence = st.sidebar.slider("Độ nhạy AI", 0.0, 1.0, 0.5)
+st.sidebar.markdown("---")
+st.sidebar.write("### 💡 Hướng dẫn:")
+st.sidebar.write("1. Cho phép trình duyệt dùng Camera.")
+st.sidebar.write("2. Chờ kết nối (có thể mất 10-20s).")
+st.sidebar.write("3. Đứng xa để thấy nửa người trên.")
+
+# --- CLASS XỬ LÝ VIDEO ---
 class PoseDetector:
     def __init__(self):
+        # Khởi tạo MediaPipe
         self.pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
         self.counter = 0
         self.stage = None
 
     def recv(self, frame):
-        # 1. Chuyển đổi format ảnh từ WebRTC sang OpenCV
         img = frame.to_ndarray(format="bgr24")
         
-        # 2. Xử lý ảnh (giống hệt code local)
+        # Xử lý ảnh
         image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         image.flags.writeable = False
         results = self.pose.process(image)
@@ -48,21 +65,14 @@ class PoseDetector:
         image.flags.writeable = True
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
-        # 3. Logic đếm (Tính toán góc)
+        # Logic đếm
         try:
             landmarks = results.pose_landmarks.landmark
-            
-            # Lấy tọa độ (Vai - Khuỷu - Cổ tay trái)
             shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
             elbow = [landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].x, landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].y]
             wrist = [landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].x, landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].y]
             
             angle = calculate_angle(shoulder, elbow, wrist)
-            
-            # Hiển thị số đo góc ngay cạnh khuỷu tay
-            cv2.putText(image, str(int(angle)), 
-                           tuple(np.multiply(elbow, [image.shape[1], image.shape[0]]).astype(int)), 
-                           cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
             
             # Logic đếm Reps
             if angle > 160:
@@ -74,37 +84,50 @@ class PoseDetector:
         except Exception as e:
             pass
 
-        # 4. Vẽ thông số trực tiếp lên Video (Vì Streamlit Metric không update realtime qua WebRTC dễ dàng được)
-        # Vẽ hộp chứa thông tin
-        cv2.rectangle(image, (0,0), (225,73), (245,117,16), -1)
+        # VẼ GIAO DIỆN LÊN VIDEO (Thay thế cho Chart bị lag trên Cloud)
+        # 1. Vẽ hộp thông tin
+        cv2.rectangle(image, (0,0), (250,80), (245,117,16), -1)
         
-        # Hiện số Reps
-        cv2.putText(image, 'REPS', (15,12), 
+        # 2. Hiện số Reps
+        cv2.putText(image, 'REPS', (15,25), 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 1, cv2.LINE_AA)
-        cv2.putText(image, str(self.counter), (10,60), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 2, (255,255,255), 2, cv2.LINE_AA)
+        cv2.putText(image, str(self.counter), (10,70), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255,255,255), 2, cv2.LINE_AA)
         
-        # Hiện trạng thái Stage
-        cv2.putText(image, 'STAGE', (65,12), 
+        # 3. Hiện trạng thái
+        cv2.putText(image, 'STAGE', (90,25), 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 1, cv2.LINE_AA)
-        cv2.putText(image, str(self.stage), (60,60), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 2, (255,255,255), 2, cv2.LINE_AA)
+        cv2.putText(image, str(self.stage), (85,70), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255,255,255), 2, cv2.LINE_AA)
 
-        # Vẽ xương
-        mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
-                                mp_drawing.DrawingSpec(color=(245,117,66), thickness=2, circle_radius=2), 
-                                mp_drawing.DrawingSpec(color=(245,66,230), thickness=2, circle_radius=2))
+        # 4. Vẽ xương
+        mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
         
-        # 5. Trả ảnh về cho Web hiển thị
         return av.VideoFrame.from_ndarray(image, format="bgr24")
 
-# --- CHẠY WEBRTC ---
-# Đây là component thay thế cho cv2.VideoCapture(0)
-webrtc_streamer(
-    key="example", 
-    video_processor_factory=PoseDetector,
-    media_stream_constraints={"video": True, "audio": False}, # Tắt âm thanh cho nhẹ
-    rtc_configuration={ # Cấu hình Server STUN (quan trọng để chạy trên mạng)
-        "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
-    }
-)
+# --- PHẦN CHÍNH ---
+st.title("💪 AI Personal Trainer - Bicep Curls")
+st.write("Ứng dụng sử dụng Pose Estimation chạy trên Cloud.")
+
+col1, col2 = st.columns([0.7, 0.3])
+
+with col1:
+    # Cấu hình WebRTC với danh sách STUN Server mở rộng
+    webrtc_streamer(
+        key="visionfit-pose", 
+        video_processor_factory=PoseDetector,
+        media_stream_constraints={"video": True, "audio": False},
+        rtc_configuration={
+            "iceServers": [
+                {"urls": ["stun:stun.l.google.com:19302"]},
+                {"urls": ["stun:stun1.l.google.com:19302"]},
+                {"urls": ["stun:stun2.l.google.com:19302"]},
+            ]
+        }
+    )
+
+with col2:
+    st.markdown("### 📊 Trạng thái")
+    st.info("Đang chờ Camera...")
+    st.write("Vì chạy trên Cloud nên sẽ có độ trễ nhất định so với chạy Local.")
+    st.success(f"Mục tiêu: {target_reps} cái")
