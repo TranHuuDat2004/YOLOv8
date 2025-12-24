@@ -1,79 +1,98 @@
-# 🏋️‍♂️ VisionFit - AI Personal Trainer
+# 👁️ Vision AI Multi-Tool
 
 > **Đồ án cuối kỳ môn Computer Vision**
 >
-> **Đề tài:** Ứng dụng Pose Estimation hỗ trợ tập luyện thể dục tại nhà.
+> **Đề tài:** Ứng dụng tích hợp Đếm ngón tay (Finger Counting) và Đếm lưu lượng xe (Traffic Counting).
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
 ![Streamlit](https://img.shields.io/badge/Streamlit-UI-red)
-![MediaPipe](https://img.shields.io/badge/MediaPipe-Pose-green)
+![YOLOv8](https://img.shields.io/badge/YOLOv8-Object%20Detection-orange)
+![MediaPipe](https://img.shields.io/badge/MediaPipe-Hand%20Tracking-green)
 
 ## 📖 Giới thiệu
-**VisionFit** là ứng dụng sử dụng Thị giác máy tính (Computer Vision) để theo dõi và phân tích động tác tập luyện của người dùng trong thời gian thực.
+Dự án này là một bộ công cụ Thị giác máy tính (Computer Vision) all-in-one, bao gồm hai module chính phục vụ các mục đích khác nhau:
 
-Ứng dụng sử dụng **MediaPipe** để phát hiện các khớp xương cơ thể và tính toán góc độ, từ đó đếm số lần tập (Reps) và cảnh báo tư thế đúng/sai.
-
-### ✨ Tính năng chính
-- 📷 **Real-time Tracking:** Nhận diện tư thế qua Webcam.
-- 🔢 **Auto Counter:** Tự động đếm số lần tập (Ví dụ: Bicep Curls).
-- 📊 **Visual Feedback:** Hiển thị biểu đồ và thanh tiến trình độ gập của cơ.
-- ⚙️ **Tùy chỉnh:** Cài đặt mục tiêu (Target Reps) và độ nhạy của thuật toán.
+1.  **✌️ AI Finger Counter:** Sử dụng MediaPipe để nhận diện bàn tay và đếm số lượng ngón tay qua Webcam theo thời gian thực.
+2.  **🚗 Traffic Counting System:** Sử dụng mô hình YOLOv8 mạnh mẽ để phát hiện, theo dõi và đếm lưu lượng phương tiện giao thông (xe hơi, xe tải, xe buýt) từ video tải lên.
 
 ---
 
-## 🛠 Cài đặt và Chạy ứng dụng (Local)
+## ✨ Tính năng chi tiết
 
-Để đảm bảo hiệu năng tốt nhất và độ trễ thấp nhất (Low Latency), khuyến khích chạy ứng dụng trực tiếp trên máy tính cá nhân thay vì trên Cloud.
+### Module 1: Đếm Ngón Tay (Finger Counter)
+*   **Công nghệ:** MediaPipe Hands.
+*   **Input:** Webcam trực tiếp (Real-time).
+*   **Chức năng:**
+    *   Phát hiện bàn tay trái/phải.
+    *   Vẽ khung xương bàn tay lên màn hình.
+    *   Thuật toán logic đếm số ngón tay đang mở.
+    *   Hiển thị kết quả ngay tức thì.
 
-### Bước 1: Clone dự án về máy
-Mở Terminal hoặc Command Prompt (CMD) và chạy lệnh:
+### Module 2: Đếm Lưu Lượng Xe (Traffic Counter)
+*   **Công nghệ:** Ultralytics YOLOv8 (Tracking & Detection).
+*   **Input:** Video tải lên (mp4, avi, mov...).
+*   **Chức năng:**
+    *   Tự động phát hiện các loại phương tiện: Xe hơi, Xe buýt, Xe tải, Xe máy.
+    *   Tracking (theo dõi) đối tượng để tránh đếm trùng lặp.
+    *   Đếm xe đi qua một vạch kẻ ảo (Virtual Line) trên đường.
+    *   Hiển thị tổng số lượng xe đã đếm được.
 
+---
+
+## 🛠 Cài đặt và Chạy ứng dụng
+
+### Bước 1: Clone dự án
 ```bash
 git clone https://github.com/tranhuudat2004/VisionFit-App.git
-cd REPO-NAME
+cd VisionFit-App
 ```
+*(Lưu ý: Tên thư mục có thể khác tùy vào nơi bạn lưu trữ)*
 
-
-### Bước 2: Cài đặt các thư viện cần thiết
-Đảm bảo bạn đã cài đặt Python. Chạy lệnh sau để cài các gói phụ thuộc:
+### Bước 2: Cài đặt thư viện
+Yêu cầu máy tính đã cài đặt Python. Chạy lệnh sau:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-> **Lưu ý:** Nếu gặp lỗi cài đặt, bạn có thể thử cài thủ công từng món:
-> `pip install streamlit mediapipe opencv-python numpy`
+### Bước 3: Chạy từng Module
 
-### Bước 3: Chạy ứng dụng
-Khởi chạy server Streamlit bằng lệnh:
-
+#### 👉 Để chạy chức năng Đếm Ngón Tay:
 ```bash
-streamlit run local.py
+streamlit run finger.py
 ```
+*Sau khi chạy, cấp quyền truy cập Camera trên trình duyệt.*
 
-Sau khi chạy lệnh, trình duyệt sẽ tự động mở ra tại địa chỉ: `http://localhost:8501/`
+#### 👉 Để chạy chức năng Đếm Lưu Lượng Xe:
+```bash
+streamlit run app.py
+```
+*Sau khi chạy, kéo thả file video giao thông vào giao diện để bắt đầu phân tích.*
 
 ---
 
-## 📂 Cấu trúc thư mục
+## 📂 Cấu trúc dự án
 
 ```text
-VisionFit-App/
-├── app.py              # Source code chính của ứng dụng
-├── requirements.txt    # Danh sách thư viện cần cài đặt
-├── README.md           # Hướng dẫn sử dụng
+Project-Folder/
+├── app.py              # Source code: Đếm lưu lượng xe (YOLOv8)
+├── finger.py           # Source code: Đếm ngón tay (MediaPipe)
+├── requirements.txt    # Danh sách thư viện
+├── README.md           # Tài liệu hướng dẫn
 └── ...
 ```
 
 ## 🧩 Công nghệ sử dụng
 *   **Ngôn ngữ:** Python 3
-*   **Giao diện (UI):** Streamlit
+*   **Giao diện:** Streamlit Framework
+*   **AI Core:**
+    *   **YOLOv8** (Object Detection & Tracking)
+    *   **Google MediaPipe** (Hand Landmarks)
 *   **Xử lý ảnh:** OpenCV
-*   **Mô hình AI:** Google MediaPipe Pose
 
 ## 👥 Nhóm thực hiện
-1.  [Tên Thành Viên 1] - [MSSV]
-2.  [Tên Thành Viên 2] - [MSSV]
+1.  Trần Hữu Đạt - 522H0081
+2.  Dương Thị Thùy Linh - 522H0015
 
 ---
-*Dự án phục vụ mục đích học tập môn Computer Vision - Năm học 202X.*
+*Dự án phục vụ mục đích học tập môn Computer Vision.*
