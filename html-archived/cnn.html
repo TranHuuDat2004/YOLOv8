@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNN Signature Security Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide-react/0.263.1/lucide-react.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .gradient-bg { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); }
+        .card-hover:hover { transform: translateY(-5px); transition: all 0.3s ease; }
+        .sig-canvas { border: 2px dashed #cbd5e1; background: white; cursor: crosshair; }
+        .nn-node { transition: all 0.5s ease; }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Header -->
+    <header class="gradient-bg text-white py-12 px-6 text-center shadow-lg">
+        <h1 class="text-4xl font-bold mb-4">Giải Pháp Bảo Mật Chữ Ký với CNN</h1>
+        <p class="text-xl text-slate-300 max-w-2xl mx-auto">So sánh Writer Identification (Định danh) và Signature Verification (Xác thực) sử dụng Deep Learning</p>
+        <div class="mt-8 flex justify-center gap-4">
+            <span class="bg-blue-500/20 border border-blue-400/30 px-4 py-2 rounded-full text-sm">CNN Architecture</span>
+            <span class="bg-purple-500/20 border border-purple-400/30 px-4 py-2 rounded-full text-sm">Siamese Networks</span>
+            <span class="bg-emerald-500/20 border border-emerald-400/30 px-4 py-2 rounded-full text-sm">Metric Learning</span>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-6 -mt-10">
+        
+        <!-- Quick Comparison -->
+        <div class="grid md:grid-cols-2 gap-6 mb-12">
+            <!-- Identification Card -->
+            <div class="bg-white p-8 rounded-2xl shadow-xl border-t-4 border-blue-500 card-hover">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="p-2 bg-blue-100 rounded-lg text-blue-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    </div>
+                    <h2 class="text-2xl font-bold">Writer Identification</h2>
+                </div>
+                <p class="text-slate-600 mb-6 italic">"Ai là người đã viết chữ ký này?"</p>
+                <ul class="space-y-3 mb-8">
+                    <li class="flex items-start gap-2">
+                        <span class="text-green-500 mt-1">✓</span>
+                        <span>Phân loại (Classification) vào các ID có sẵn.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-red-500 mt-1">✗</span>
+                        <span>Khó mở rộng: Cần train lại khi có người dùng mới.</span>
+                    </li>
+                </ul>
+                <button onclick="scrollToSection('demo-id')" class="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition">Thử Nghiệm Phân Loại</button>
+            </div>
+
+            <!-- Verification Card -->
+            <div class="bg-white p-8 rounded-2xl shadow-xl border-t-4 border-emerald-500 card-hover">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="p-2 bg-emerald-100 rounded-lg text-emerald-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
+                    <h2 class="text-2xl font-bold">Signature Verification</h2>
+                </div>
+                <p class="text-slate-600 mb-6 italic">"Hai chữ ký này có cùng một chủ nhân không?"</p>
+                <ul class="space-y-3 mb-8">
+                    <li class="flex items-start gap-2">
+                        <span class="text-green-500 mt-1">✓</span>
+                        <span>Khả năng mở rộng cao (Open Set).</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-blue-500 mt-1">i</span>
+                        <span>Sử dụng Siamese Network & Triplet Loss.</span>
+                    </li>
+                </ul>
+                <button onclick="scrollToSection('demo-verify')" class="w-full py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition">Thử Nghiệm Xác Thực</button>
+            </div>
+        </div>
+
+        <!-- Section 1: Identification Demo -->
+        <section id="demo-id" class="mb-16 bg-white rounded-2xl p-8 shadow-md">
+            <h3 class="text-2xl font-bold mb-6 text-blue-800 border-b pb-2">Mô Phỏng 1: Writer Identification (Classification)</h3>
+            <div class="grid md:grid-cols-2 gap-10 items-center">
+                <div>
+                    <p class="text-slate-600 mb-4">Trong mô hình này, hệ thống sẽ cố gắng gán chữ ký vào một nhãn (Label) cụ thể trong tập dữ liệu đã học.</p>
+                    <div class="bg-slate-50 p-6 rounded-xl border mb-6">
+                        <h4 class="font-bold mb-4">Luồng xử lý (Standard CNN):</h4>
+                        <div class="flex flex-wrap gap-4 items-center">
+                            <div class="text-xs bg-white p-2 border rounded shadow-sm">Input Image</div>
+                            <span class="text-slate-400">→</span>
+                            <div class="text-xs bg-blue-100 p-2 border border-blue-200 rounded shadow-sm font-mono">Conv + Pool</div>
+                            <span class="text-slate-400">→</span>
+                            <div class="text-xs bg-blue-100 p-2 border border-blue-200 rounded shadow-sm font-mono">Flatten</div>
+                            <span class="text-slate-400">→</span>
+                            <div class="text-xs bg-indigo-500 text-white p-2 border rounded shadow-sm font-bold">Softmax (ID)</div>
+                        </div>
+                    </div>
+                    <button onclick="runIdentification()" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-bold">Quét Chữ Ký & Nhận Dạng</button>
+                </div>
+                
+                <div class="relative flex flex-col items-center">
+                    <div id="id-display" class="w-64 h-48 bg-slate-100 rounded-lg border-2 border-slate-300 flex items-center justify-center relative overflow-hidden">
+                        <div id="scanner-line" class="hidden absolute top-0 left-0 w-full h-1 bg-blue-400 shadow-[0_0_15px_blue] z-10"></div>
+                        <img id="sig-placeholder" src="https://api.placeholder.com/200/100?text=Chữ+Ký+Mẫu" class="opacity-40" alt="Chữ ký">
+                    </div>
+                    <div id="id-result" class="mt-4 p-4 rounded-lg w-full text-center font-bold text-slate-400 border border-dashed">
+                        Kết quả dự đoán sẽ hiển thị ở đây
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Verification Demo -->
+        <section id="demo-verify" class="mb-16 bg-white rounded-2xl p-8 shadow-md">
+            <h3 class="text-2xl font-bold mb-6 text-emerald-800 border-b pb-2">Mô Phỏng 2: Signature Verification (Metric Learning)</h3>
+            <div class="grid lg:grid-cols-3 gap-8 items-start">
+                
+                <!-- Input 1 -->
+                <div class="space-y-4">
+                    <h4 class="font-semibold text-center">Chữ ký Gốc (Anchor)</h4>
+                    <div class="h-40 bg-slate-50 rounded-xl border-2 border-dashed border-emerald-200 flex items-center justify-center p-4">
+                        <img src="https://api.dicebear.com/7.x/initials/svg?seed=Dat&backgroundColor=fff" class="h-24 grayscale" alt="Anchor">
+                    </div>
+                    <div class="bg-emerald-50 p-3 rounded-lg text-xs text-emerald-800 text-center">Được mã hóa thành Vector v₁</div>
+                </div>
+
+                <!-- Middle Visualization (The Network) -->
+                <div class="flex flex-col items-center justify-center h-full space-y-4">
+                    <div class="text-sm font-bold text-slate-400 uppercase tracking-widest">Siamese Network</div>
+                    <div class="flex gap-2">
+                        <div class="w-4 h-16 bg-emerald-500 rounded-full animate-bounce"></div>
+                        <div class="w-4 h-24 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                        <div class="w-4 h-16 bg-indigo-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                    </div>
+                    <div class="p-4 bg-slate-800 text-white rounded-lg text-xs font-mono text-center w-full">
+                        Loss = max(0, d(a,p) - d(a,n) + margin)
+                    </div>
+                    <button onclick="runVerification()" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-200">
+                        So Sánh Độ Tương Đồng
+                    </button>
+                </div>
+
+                <!-- Input 2 -->
+                <div class="space-y-4">
+                    <h4 class="font-semibold text-center">Chữ ký Cần Kiểm Tra</h4>
+                    <div class="h-40 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center p-4">
+                        <img id="compare-sig" src="https://api.dicebear.com/7.x/initials/svg?seed=Random&backgroundColor=fff" class="h-24 grayscale transition-opacity" alt="Comparison">
+                    </div>
+                    <div class="bg-slate-100 p-3 rounded-lg text-xs text-slate-600 text-center">Được mã hóa thành Vector v₂</div>
+                </div>
+
+            </div>
+
+            <!-- Verification Result -->
+            <div id="verify-result-box" class="mt-12 hidden">
+                <div class="max-w-2xl mx-auto p-6 rounded-2xl border-2 bg-white flex flex-col items-center">
+                    <div class="text-sm text-slate-500 mb-2 uppercase font-bold">Khoảng cách Euclidean</div>
+                    <div id="distance-value" class="text-5xl font-black mb-4 font-mono">0.000</div>
+                    <div id="match-badge" class="px-6 py-2 rounded-full font-bold text-lg mb-4">...</div>
+                    <p id="verify-text" class="text-center text-slate-600"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Summary Table -->
+        <section class="mb-16 overflow-hidden rounded-2xl shadow-lg border border-slate-200">
+            <table class="w-full text-left bg-white">
+                <thead class="bg-slate-50 border-b">
+                    <tr>
+                        <th class="p-4 font-bold">Đặc điểm</th>
+                        <th class="p-4 font-bold text-blue-600">Identification</th>
+                        <th class="p-4 font-bold text-emerald-600">Verification</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    <tr>
+                        <td class="p-4 font-medium">Mục tiêu</td>
+                        <td class="p-4">Phân loại người viết cụ thể</td>
+                        <td class="p-4">Kiểm tra tính hợp lệ của cặp chữ ký</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-medium">Kiến trúc</td>
+                        <td class="p-4 font-mono text-sm">CNN (Conv->Pool->Dense)</td>
+                        <td class="p-4 font-mono text-sm">Siamese (Shared Weights)</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-medium">Độ mở rộng (Scalability)</td>
+                        <td class="p-4 text-red-600 font-semibold">Kém (Cần retraining)</td>
+                        <td class="p-4 text-green-600 font-semibold">Rất tốt (Open Set)</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-medium">Trường hợp sử dụng</td>
+                        <td class="p-4">Điều tra pháp y (tập đóng)</td>
+                        <td class="p-4">Ngân hàng, Kiểm soát ra vào</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 py-12 px-6 text-center">
+        <p class="mb-2">Báo cáo dự án bởi Tran Huu Dat</p>
+        <p class="text-sm">Xây dựng trên nền tảng CNN & Siamese Network</p>
+    </footer>
+
+    <script>
+        // Utilities
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Section 1: Identification Logic
+        function runIdentification() {
+            const line = document.getElementById('scanner-line');
+            const resultBox = document.getElementById('id-result');
+            const img = document.getElementById('sig-placeholder');
+            
+            line.classList.remove('hidden');
+            line.style.top = '0%';
+            resultBox.innerHTML = '<span class="pulse">Đang trích xuất đặc trưng (Feature Extraction)...</span>';
+            resultBox.className = "mt-4 p-4 rounded-lg w-full text-center font-bold text-blue-500 bg-blue-50 border border-blue-200";
+
+            let pos = 0;
+            const interval = setInterval(() => {
+                pos += 2;
+                line.style.top = pos + '%';
+                if (pos >= 100) {
+                    clearInterval(interval);
+                    line.classList.add('hidden');
+                    finalizeIdentification();
+                }
+            }, 30);
+        }
+
+        function finalizeIdentification() {
+            const resultBox = document.getElementById('id-result');
+            const writers = ["Trần Hữu Đạt (ID: 001)", "Nguyễn Văn A (ID: 002)", "Lê Thị B (ID: 003)"];
+            const selected = writers[Math.floor(Math.random() * writers.length)];
+            const confidence = (Math.random() * 20 + 78).toFixed(2);
+            
+            resultBox.innerHTML = `
+                <div class="text-sm text-slate-500">Dự đoán hoàn tất</div>
+                <div class="text-xl text-blue-700">${selected}</div>
+                <div class="text-xs text-blue-400 mt-1">Độ tin cậy: ${confidence}% | Hàm lỗi: Cross-Entropy</div>
+            `;
+        }
+
+        // Section 2: Verification Logic
+        function runVerification() {
+            const compareImg = document.getElementById('compare-sig');
+            const resultBox = document.getElementById('verify-result-box');
+            const distVal = document.getElementById('distance-value');
+            const badge = document.getElementById('match-badge');
+            const text = document.getElementById('verify-text');
+
+            compareImg.style.opacity = "0.3";
+            resultBox.classList.add('hidden');
+
+            setTimeout(() => {
+                // Mock logic: 50% chance to be the same person
+                const isSame = Math.random() > 0.5;
+                const distance = isSame ? (Math.random() * 0.3).toFixed(3) : (Math.random() * 0.7 + 0.4).toFixed(3);
+                
+                compareImg.src = `https://api.dicebear.com/7.x/initials/svg?seed=${isSame ? 'Dat' : Math.random()}&backgroundColor=fff`;
+                compareImg.style.opacity = "1";
+                
+                resultBox.classList.remove('hidden');
+                distVal.innerText = distance;
+                distVal.style.color = isSame ? '#10b981' : '#ef4444';
+
+                if (isSame) {
+                    badge.innerText = "KHỚP CHỮ KÝ";
+                    badge.className = "px-6 py-2 rounded-full font-bold text-lg mb-4 bg-emerald-100 text-emerald-700 border border-emerald-300";
+                    text.innerText = "Siamese Network xác nhận hai chữ ký có khoảng cách vector thấp. Đây là cùng một người.";
+                } else {
+                    badge.innerText = "KHÔNG TRÙNG KHỚP";
+                    badge.className = "px-6 py-2 rounded-full font-bold text-lg mb-4 bg-red-100 text-red-700 border border-red-300";
+                    text.innerText = "Khoảng cách vector vượt ngưỡng an toàn. Hệ thống nghi ngờ đây là chữ ký giả mạo hoặc người khác.";
+                }
+            }, 800);
+        }
+    </script>
+</body>
+</html>
