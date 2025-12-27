@@ -14,6 +14,7 @@ Dự án này là một bộ công cụ Thị giác máy tính (Computer Vision)
 
 1.  **✌️ AI Finger Counter:** Sử dụng MediaPipe để nhận diện bàn tay và đếm số lượng ngón tay qua Webcam theo thời gian thực.
 2.  **🚗 Traffic Counting System:** Sử dụng mô hình YOLOv8 mạnh mẽ để phát hiện, theo dõi và đếm lưu lượng phương tiện giao thông (xe hơi, xe tải, xe buýt) từ video tải lên.
+3.  **🚶 Pedestrian Counting:** Hệ thống đếm người đi bộ thông minh với cơ chế lọc nhiễu (Anti-Flicker) để đảm bảo độ chính xác cao.
 
 ---
 
@@ -36,6 +37,15 @@ Dự án này là một bộ công cụ Thị giác máy tính (Computer Vision)
     *   Tracking (theo dõi) đối tượng để tránh đếm trùng lặp.
     *   Đếm xe đi qua một vạch kẻ ảo (Virtual Line) trên đường.
     *   Hiển thị tổng số lượng xe đã đếm được.
+
+### Module 3: Đếm Người Đi Bộ (Pedestrian Counter)
+*   **Công nghệ:** YOLOv8 (Person Class) & ByteTrack.
+*   **Input:** Video CCTV / Giám sát.
+*   **Chức năng:**
+    *   Phát hiện và theo dõi người đi bộ (Class 0).
+    *   **Cơ chế Anti-Flicker:** Chỉ đếm khi đối tượng xuất hiện liên tục trong N frame (tùy chỉnh được), giúp loại bỏ nhận diện sai/chập chờn.
+    *   Vẽ đường di chuyển (Trajectory) của từng người.
+    *   Hiển thị tổng số người đã đi qua.
 
 ---
 
@@ -69,6 +79,12 @@ streamlit run app.py
 ```
 *Sau khi chạy, kéo thả file video giao thông vào giao diện để bắt đầu phân tích.*
 
+#### 👉 Để chạy chức năng Đếm Người Đi Bộ:
+```bash
+streamlit run app_pedestrian.py
+```
+*Tùy chỉnh thanh trượt "Anti-Flicker" bên thanh công cụ để lọc nhiễu tốt nhất.*
+
 ---
 
 ## 📂 Cấu trúc dự án
@@ -76,6 +92,7 @@ streamlit run app.py
 ```text
 Project-Folder/
 ├── app.py              # Source code: Đếm lưu lượng xe (YOLOv8)
+├── app_pedestrian.py   # Source code: Đếm người đi bộ (Anti-Flicker)
 ├── finger.py           # Source code: Đếm ngón tay (MediaPipe)
 ├── requirements.txt    # Danh sách thư viện
 ├── README.md           # Tài liệu hướng dẫn
